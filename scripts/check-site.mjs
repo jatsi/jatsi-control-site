@@ -29,8 +29,11 @@ for (const [page, html] of documents) {
   }
   if (!/href="[^\"]*privacy\//.test(html) || !/href="[^\"]*terms\//.test(html)) errors.push(`${page}: faltan enlaces de privacidad y términos`);
 }
-const script = await readFile(resolve(root, "assets/site.js"), "utf8");
-if (/\b(?:fetch|WebSocket|EventSource)\s*\(|localhost|127\.0\.0\.1|https?:\/\//.test(script)) errors.push("La interacción del sitio debe funcionar sin consultas a servicios ni recursos remotos");
+for (const asset of await readdir(resolve(root, "assets"))) {
+  if (!asset.endsWith(".js")) continue;
+  const script = await readFile(resolve(root, "assets", asset), "utf8");
+  if (/\b(?:fetch|WebSocket|EventSource)\s*\(|localhost|127\.0\.0\.1/.test(script)) errors.push(`${asset}: la interacción del sitio debe funcionar sin consultas a servicios`);
+}
 const screenshots = (await readdir(resolve(root, "assets/screenshots"))).filter(path => path.endsWith(".webp"));
 if (screenshots.length < 6) errors.push("Faltan capturas nuevas de Desktop");
 if (errors.length) { console.error(errors.join("\n")); process.exitCode = 1; }

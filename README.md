@@ -21,21 +21,32 @@ Repositorio previsto: `https://github.com/jatsi/jatsi-control-site`.
    publica la web. Puede ejecutarse desde **Actions → Publicar sitio JATSI Control
    → Run workflow** o con un nuevo commit en `main`.
 
-La dirección esperada tras un despliegue correcto es
-`https://jatsi.github.io/jatsi-control-site/`. Es una dirección prevista hasta que
-GitHub confirme el despliegue y responda públicamente.
+Dirección pública: `https://jatsi.github.io/jatsi-control-site/`.
 
 ## Comprobación local
 
 Node.js 22 o posterior, sin instalar dependencias:
 
 ```text
+npm test
 npm run build
 npm run preview
 ```
 
 La vista previa está en `http://127.0.0.1:4180`. Es un servidor solo para revisar
 los archivos estáticos; no inicia ni consulta la app Desktop.
+
+## Estudio interactivo
+
+La sección «Pruébalo» permite enviar likes, follows, regalos y comentarios de
+ejemplo, alternar entre Likes flotantes, metas, ranking, Gift vs Gift y alertas,
+y probar nueve figuras vectoriales con color y tamaño configurables. Los datos
+se comparten entre las vistas y se pueden reiniciar. La secuencia guiada se
+inicia manualmente y se pausa al salir de la sección o cambiar de pestaña.
+
+Los SVG de Likes flotantes coinciden con los usados en Jatsi-Control y
+Jatsi-Control-Desktop. El sitio sólo demuestra su funcionamiento: no conecta a
+TikTok, no recibe eventos reales y no guarda nombres ni comentarios.
 
 ## Registro de TikTok Login Kit
 
