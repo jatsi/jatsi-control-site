@@ -25,7 +25,7 @@
   // These are the same currentColor silhouettes used by Desktop's floating-likes.js.
   // Only these fixed, authored SVG strings enter innerHTML; participant text never does.
   const vectors = {
-    heart: '<path d="M50 88 13 52C-3 34 8 9 29 9c10 0 17 5 21 13C55 14 63 9 73 9c21 0 30 25 14 43Z"/>',
+    heart: '<path d="M50 88 13 52C-3 34 8 9 29 9c10 0 17 5 21 13C55 14 63 9 73 9c21 0 30 25 14 43Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>',
     star: '<path d="m50 6 13 28 31 4-23 22 6 31-27-15-27 15 6-31L6 38l31-4Z"/>',
     sparkle: '<path d="M50 3c5 26 15 36 45 47-30 8-40 19-45 47C43 69 33 58 5 50 33 42 43 31 50 3Z"/><path d="m80 5 3 12 12 3-12 4-3 11-4-11-11-4 11-3Z" opacity=".65"/>',
     bubble: '<circle cx="50" cy="50" r="37" fill="currentColor" fill-opacity=".15" stroke="currentColor" stroke-width="6"/><path d="M26 44a26 26 0 0 1 18-19" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="70" cy="70" r="4"/>',
@@ -50,7 +50,7 @@
   let sequenceIndex = 0;
   let sequenceTimer = 0;
   let pulseTimer = 0;
-  let particleTimer = 0;
+  const particleTimers = new Map();
 
   const node = (tag, className, text) => {
     const item = document.createElement(tag);
@@ -167,15 +167,9 @@
     get("alert-title").textContent = event ? event.name : "Tu comunidad";
     get("alert-copy").textContent = event ? event.copy : "Una nueva estrella se une al canal.";
     get("alert-avatar").textContent = event ? event.icon : "✦";
-    get("heart-copy").textContent = event?.type === "like" ? `${event.name} impulsa tu LIVE.` : "Envía likes y mira cómo suben.";
     get("pipeline-event").textContent = event ? event.title : "Esperando tu primer clic";
     get("pipeline-action").textContent = event ? event.action : "Preparar la reacción";
     get("pipeline-overlay").textContent = outputDescription();
-    get("comment-preview").hidden = !(event?.type === "comment" && controls.overlay.value === "hearts");
-    if (state.lastComment) {
-      get("comment-name").textContent = state.lastComment.name;
-      get("comment-text").textContent = state.lastComment.text;
-    }
     const log = get("log");
     log.replaceChildren();
     if (!state.log.length) log.append(node("li", "", "Tu primer evento aparecerá aquí."));
@@ -189,31 +183,40 @@
 
   function clearEffects() {
     window.clearTimeout(pulseTimer);
-    window.clearTimeout(particleTimer);
     pulseTimer = 0;
-    particleTimer = 0;
+    particleTimers.forEach((timer) => window.clearTimeout(timer));
+    particleTimers.clear();
     stage.classList.remove("is-reacting");
     particles.replaceChildren();
+  }
+
+  function removeParticle(particle) {
+    const timer = particleTimers.get(particle);
+    if (timer !== undefined) window.clearTimeout(timer);
+    particleTimers.delete(particle);
+    particle.remove();
   }
 
   function burst() {
     if (motionPaused || reducedMotion.matches || document.hidden || !inView) return;
     const shape = controls.shape.value;
-    // Repeated clicks never grow the visual layer beyond 36 particles.
-    while (particles.children.length > 24) particles.firstElementChild.remove();
-    for (let index = 0; index < 12; index += 1) {
+    // New bursts use only free slots; active particles always finish their trip.
+    const count = Math.min(12, Math.max(0, 36 - particles.children.length));
+    for (let index = 0; index < count; index += 1) {
       const particle = node("span", "od-heart-particle");
+      particle.dataset.shape = shape;
+      const duration = 4 * (.9 + Math.random() * .22);
+      const delay = index * .08;
       particle.style.setProperty("--od-x", `${20 + Math.random() * 60}%`);
       particle.style.setProperty("--od-drift", `${Math.random() * 100 - 50}px`);
-      particle.style.setProperty("--od-sway", `${Math.random() * 30 + 5}px`);
-      particle.style.setProperty("--od-delay", `${index * .035}s`);
+      particle.style.setProperty("--od-duration", `${duration}s`);
+      particle.style.setProperty("--od-delay", `${delay}s`);
       particle.style.setProperty("--od-rotation", `${Math.random() * 40 - 20}deg`);
       particle.append(shapeSvg(shape));
       particles.append(particle);
-      particle.addEventListener("animationend", () => particle.remove(), { once: true });
+      particle.addEventListener("animationend", () => removeParticle(particle), { once: true });
+      particleTimers.set(particle, window.setTimeout(() => removeParticle(particle), (duration + delay) * 1000 + 80));
     }
-    window.clearTimeout(particleTimer);
-    particleTimer = window.setTimeout(() => { particles.replaceChildren(); particleTimer = 0; }, 4550);
   }
 
   function sendEvent(input) {
@@ -221,7 +224,7 @@
     render();
     window.clearTimeout(pulseTimer);
     stage.classList.remove("is-reacting");
-    if (!motionPaused && !reducedMotion.matches) {
+    if (controls.overlay.value !== "hearts" && !motionPaused && !reducedMotion.matches) {
       void stage.offsetWidth;
       stage.classList.add("is-reacting");
       pulseTimer = window.setTimeout(() => { stage.classList.remove("is-reacting"); pulseTimer = 0; }, 1000);
@@ -233,6 +236,7 @@
   function selectView(value) {
     controls.overlay.value = value;
     stage.dataset.view = value;
+    get("session-stats").hidden = value === "hearts";
     root.querySelectorAll("[data-od-view]").forEach((view) => { view.hidden = view.dataset.odView !== value; });
     get("view-description").textContent = descriptions[value];
     render();
@@ -243,9 +247,12 @@
     const size = Math.max(14, Math.min(120, Number(controls.size.value) || 38));
     stage.style.setProperty("--od-heart-size", `${size}px`);
     get("size-value").value = `${size} px`;
-    root.querySelectorAll("[data-od-particle-symbol]").forEach((symbol) => symbol.replaceChildren(shapeSvg(controls.shape.value)));
     // Changing the silhouette also updates particles already visible in the preview.
-    particles.querySelectorAll(".od-heart-particle").forEach((particle) => particle.replaceChildren(shapeSvg(controls.shape.value)));
+    particles.querySelectorAll(".od-heart-particle").forEach((particle) => {
+      if (particle.dataset.shape === controls.shape.value) return;
+      particle.dataset.shape = controls.shape.value;
+      particle.replaceChildren(shapeSvg(controls.shape.value));
+    });
   }
 
   function updateMotion() {

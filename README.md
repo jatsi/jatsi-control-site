@@ -45,7 +45,9 @@ se comparten entre las vistas y se pueden reiniciar. La secuencia guiada se
 inicia manualmente y se pausa al salir de la sección o cambiar de pestaña.
 
 Los SVG de Likes flotantes coinciden con los usados en Jatsi-Control y
-Jatsi-Control-Desktop. El sitio sólo demuestra su funcionamiento: no conecta a
+Jatsi-Control-Desktop: corazones de contorno y partículas que ascienden de forma
+continua, sin una caja, nombres ni contador dentro del overlay. El sitio sólo
+demuestra su funcionamiento: no conecta a
 TikTok, no recibe eventos reales y no guarda nombres ni comentarios.
 
 ## Registro de TikTok Login Kit

@@ -6,6 +6,7 @@ import test from "node:test";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const modelSource = readFileSync(new URL("../assets/overlay-demo-model.js", import.meta.url), "utf8");
 const controllerSource = readFileSync(new URL("../assets/overlay-demo.js", import.meta.url), "utf8");
+const css = readFileSync(new URL("../assets/overlay-demo.css", import.meta.url), "utf8");
 
 // This small DOM double checks controller behavior and lifecycle, not layout or
 // browser rendering. Native inputs/buttons remain responsible for keyboard UX.
@@ -135,32 +136,93 @@ function studio() {
   };
 }
 
-test("el estudio limita las partículas y aplica SVG, color y tamaño sin interpretar datos del usuario", () => {
+test("los likes flotantes solo dibujan partículas de contorno y mantienen el estado fuera del overlay", () => {
   const app = studio();
   assert.equal(app.stat("likes"), "1,250");
   assert.equal(app.root.querySelectorAll("[data-od-view]").filter((view) => !view.hidden).length, 1);
+  const heartsView = app.root.querySelectorAll("[data-od-view]").find((view) => view.dataset.odView === "hearts");
+  assert.equal(heartsView.children.length, 0);
+  assert.equal(heartsView.textContent.trim(), "");
+  assert.equal(app.get("session-stats").hidden, true);
+  assert.equal(app.root.querySelector(".od-heart-strip"), null);
+  assert.equal(app.get("heart-copy"), null);
+  assert.equal(app.get("delta"), null);
   app.get("name").value = "<img src=x onerror=MALICIOUS>";
   app.click("like");
   assert.equal(app.stat("likes"), "1,500");
   assert.match(app.get("pipeline-event").textContent, /MALICIOUS/);
   assert.ok(app.markupWrites.every((markup) => !markup.includes("MALICIOUS")));
   assert.equal(app.get("particles").children.length, 12);
+  const vector = app.get("particles").children[0].children[0].innerHTML;
+  assert.match(vector, /fill="none"/);
+  assert.match(vector, /stroke="currentColor" stroke-width="6"/);
+  assert.match(vector, /stroke-linecap="round" stroke-linejoin="round"/);
+  app.click("comment");
+  assert.equal(heartsView.textContent.trim(), "");
+  assert.equal(app.get("session-stats").hidden, true);
+});
+
+test("los clics seguidos conservan el recorrido previo, respetan cupos libres y limpian cada partícula", () => {
+  const app = studio();
+  app.click("like");
+  const firstBurst = [...app.get("particles").children];
+  const initialTimers = new Map(app.timers);
+  app.advance(1000);
+  app.click("like");
+  assert.equal(app.get("particles").children.length, 24);
+  assert.ok(firstBurst.every((particle) => app.get("particles").children.includes(particle)), "otro clic no debe retirar ni recrear la ráfaga anterior");
+  for (const [id, timer] of initialTimers) assert.equal(app.timers.get(id), timer, "el fin de cada partícula conserva su timer original");
   for (let index = 0; index < 15; index += 1) app.click("like");
   assert.equal(app.get("particles").children.length, 36);
-  assert.ok(app.timers.size <= 2, "ráfagas repetidas comparten los timers de limpieza");
+  assert.ok(firstBurst.every((particle) => app.get("particles").children.includes(particle)), "llenar los 36 cupos omite partículas nuevas, sin truncar las existentes");
+  assert.equal(app.timers.size, 36);
+  firstBurst[0].dispatch("animationend");
+  assert.equal(app.get("particles").children.length, 35);
+  assert.equal(app.timers.size, 35);
+  app.click("like");
+  assert.equal(app.get("particles").children.length, 36, "el siguiente clic ocupa solamente el cupo liberado");
+  app.advance(10000);
+  assert.equal(app.get("particles").children.length, 0);
+  assert.equal(app.timers.size, 0);
+});
+
+test("el color, tamaño y figura se actualizan juntos sin reiniciar las partículas ni su limpieza", () => {
+  const app = studio();
+  app.click("like");
+  const firstParticle = app.get("particles").children[0];
+  const firstVector = firstParticle.children[0];
+  const timers = new Map(app.timers);
   for (const [control, value] of [["color", "#00ff00"], ["size", "120"], ["shape", "butterfly"]]) {
     app.get(control).value = value;
     app.get(control).dispatch("input");
+    assert.equal(app.get("particles").children[0], firstParticle);
+    if (control !== "shape") assert.equal(firstParticle.children[0], firstVector);
+    for (const [id, timer] of timers) assert.equal(app.timers.get(id), timer);
   }
   assert.equal(app.get("stage").style.values["--od-heart-color"], "#00ff00");
   assert.equal(app.get("stage").style.values["--od-heart-size"], "120px");
   assert.equal(app.get("size-value").value, "120 px");
   assert.match(app.get("particles").children[0].children[0].innerHTML, /M48 47/);
+  assert.ok(app.get("particles").children.every((particle) => particle.dataset.shape === "butterfly"));
   app.get("reset").dispatch("click");
   assert.equal(app.stat("events"), "0");
   assert.equal(app.stat("likes"), "1,250");
   assert.equal(app.get("particles").children.length, 0);
   assert.equal(app.timers.size, 0);
+});
+
+test("el ascenso usa velocidad lineal, extremos de transform y un brillo suave para conservar el centro hueco", () => {
+  const particleRule = css.match(/\.od-heart-particle\{([^}]+)\}/)[1];
+  assert.match(particleRule, /animation:od-heart-rise var\(--od-duration,4s\) linear /);
+  const keyframes = css.match(/@keyframes od-heart-rise\{(.+)\}/)[1];
+  const frames = [...keyframes.matchAll(/(\d+)%\{([^}]+)\}/g)];
+  assert.deepEqual(frames.filter(([, , body]) => body.includes("transform:")).map(([, point]) => Number(point)), [0, 100]);
+  assert.doesNotMatch(keyframes, /scale\(/);
+  assert.match(css, /\.od-heart-particle\[data-shape=heart\]\{filter:drop-shadow\(0 0 3px .*35%/);
+  assert.doesNotMatch(css, /\.od-heart-strip|\.od-strip-delta|\.od-heart-spotlight/);
+  for (const asset of ["style.css", "site.js", "overlay-demo.css", "overlay-demo.js", "overlay-demo-model.js"]) {
+    assert.ok(html.includes(`assets/${asset}?v=20261019-flow3`));
+  }
 });
 
 test("el LIVE requiere play, pausa al salir y al cambiar de pestaña, y reset cancela la secuencia", () => {
@@ -209,6 +271,7 @@ test("las vistas y preferencias cambian localmente y reducir movimiento conserva
   assert.equal(app.root.dataset.theme, "garden");
   assert.equal(app.get("stage").dataset.background, "transparent");
   assert.equal(app.get("stage").dataset.format, "portrait");
+  assert.equal(app.get("session-stats").hidden, false);
   assert.equal(app.root.querySelectorAll("[data-od-view]").filter((view) => !view.hidden).length, 1);
   app.get("motion").dispatch("click");
   app.click("like");

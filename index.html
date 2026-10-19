@@ -13,11 +13,11 @@
   <meta property="og:description" content="Tu estudio de interacciones para LIVE: overlays, acciones, sonidos e integraciones en una aplicación de escritorio.">
   <title>JATSI Control · Tu directo, en otra dimensión</title>
   <link rel="icon" href="assets/jatsi-icon.png" type="image/png">
-  <link rel="stylesheet" href="assets/style.css?v=20261019-demo2">
-  <link rel="stylesheet" href="assets/overlay-demo.css">
-  <script src="assets/site.js?v=20261019-demo2" defer></script>
-  <script src="assets/overlay-demo-model.js" defer></script>
-  <script src="assets/overlay-demo.js" defer></script>
+  <link rel="stylesheet" href="assets/style.css?v=20261019-flow3">
+  <link rel="stylesheet" href="assets/overlay-demo.css?v=20261019-flow3">
+  <script src="assets/site.js?v=20261019-flow3" defer></script>
+  <script src="assets/overlay-demo-model.js?v=20261019-flow3" defer></script>
+  <script src="assets/overlay-demo.js?v=20261019-flow3" defer></script>
 </head>
 <body class="landing-page">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -82,20 +82,19 @@
                   <div class="od-scene-art" aria-hidden="true"><div class="od-scene-arch"></div><div class="od-scene-horizon"></div><div class="od-scene-copy">TU CONTENIDO<br><span>El overlay lo hace parte del show.</span></div></div>
                   <div class="od-stage-topline"><span><i aria-hidden="true"></i> VISTA PREVIA</span><span data-od-theme-caption>Cristal</span></div>
                   <div class="od-overlay-area">
-                    <div class="od-view od-view-hearts" data-od-view="hearts"><article class="od-widget od-heart-strip"><span class="od-strip-symbol" aria-hidden="true" data-od-particle-symbol>♥</span><div><small class="od-strip-kicker">TIKTOK LIVE · DEMOSTRACIÓN</small><strong><span data-od-stat="likes">1,250</span> likes</strong><p data-od-heart-copy>Envía likes y mira cómo suben.</p></div><span class="od-strip-delta" data-od-delta>+250</span></article></div>
+                    <div class="od-view od-view-hearts" data-od-view="hearts" aria-hidden="true"></div>
                     <div class="od-view od-view-goals" data-od-view="goals" hidden><div class="od-goal-stack" data-od-goals></div></div>
                     <div class="od-view od-view-ranking" data-od-view="ranking" hidden><section class="od-ranking-board"><h3>✦ Top de donadores</h3><div class="od-ranking-list" data-od-ranking></div><p>MONEDAS DE EJEMPLO · ESTA SESIÓN</p></section></div>
                     <div class="od-view od-view-duel" data-od-view="duel" hidden><section class="od-duel-board"><header><span>✦ GIFT VS GIFT</span><span>RONDA DEMO</span></header><div class="od-duel-arena"><article class="od-gift-team" data-od-side="left"><span class="od-team-kicker">EQUIPO ROSA</span><span class="od-gift-art" aria-hidden="true">🌹</span><div class="od-team-plinth"><strong>Rosa</strong><b data-od-duel-left>260</b><small>MONEDAS</small><span class="od-team-lead" data-od-lead-left>En cabeza</span></div></article><span class="od-versus" aria-label="contra">V<span>ϟ</span>S</span><article class="od-gift-team" data-od-side="right"><span class="od-team-kicker">EQUIPO ESTRELLA</span><span class="od-gift-art" aria-hidden="true">⭐</span><div class="od-team-plinth"><strong>Estrella</strong><b data-od-duel-right>160</b><small>MONEDAS</small><span class="od-team-lead" data-od-lead-right hidden>En cabeza</span></div></article></div><div class="od-duel-meter" role="img" aria-label="Equipo Rosa: 260. Equipo Estrella: 160." data-od-duel-meter><i data-od-duel-fill></i><span aria-hidden="true">ϟ</span></div><p data-od-duel-caption>Rosa va en cabeza · Envía un regalo a tu equipo.</p></section></div>
                     <div class="od-view od-view-alert" data-od-view="alert" hidden><article class="od-widget od-alert-strip"><span class="od-alert-avatar" aria-hidden="true" data-od-alert-avatar>✦</span><div><span class="od-strip-kicker" data-od-alert-kicker>VISTA PREVIA · NUEVO FOLLOW</span><strong data-od-alert-title>Tu comunidad</strong><p data-od-alert-copy>Una nueva estrella se une al canal.</p></div></article></div>
                   </div>
                   <div class="od-heart-particles" aria-hidden="true" data-od-particles></div>
-                  <div class="od-preview-comment" data-od-comment-preview hidden><span aria-hidden="true">◌</span><div><strong data-od-comment-name></strong><p data-od-comment-text></p></div></div>
                   <span class="od-stage-signature">JATSI CONTROL / DEMO</span>
                 </div>
               </div>
               <div class="od-preview-caption"><p data-od-view-description>Likes flotantes: cambia la figura, el color y el tamaño; envía likes para verlos ascender.</p><div><button class="od-small-button" type="button" data-od-motion aria-pressed="false">Pausar animaciones</button><button class="od-small-button" type="button" data-od-reset>Reiniciar</button></div></div>
               <ol class="od-pipeline" aria-label="Del evento al overlay"><li><span>01 / EVENTO RECIBIDO</span><strong data-od-pipeline-event>Esperando tu primer clic</strong></li><li><span>02 / ACCIÓN</span><strong data-od-pipeline-action>Preparar la reacción</strong></li><li><span>03 / OVERLAY</span><strong data-od-pipeline-overlay>Likes flotantes</strong></li></ol>
-              <div class="od-session-stats" aria-label="Resumen de la simulación"><span><b data-od-stat="likes">1,250</b> likes</span><span><b data-od-stat="follows">24</b> follows</span><span><b data-od-stat="coins">420</b> monedas</span><span><b data-od-stat="events">0</b> eventos enviados</span></div>
+              <div class="od-session-stats" aria-label="Resumen de la simulación" data-od-session-stats hidden><span><b data-od-stat="likes">1,250</b> likes</span><span><b data-od-stat="follows">24</b> follows</span><span><b data-od-stat="coins">420</b> monedas</span><span><b data-od-stat="events">0</b> eventos enviados</span></div>
             </div>
           </div>
           <details class="od-log"><summary>Actividad reciente <span data-od-log-count>0 eventos</span></summary><ol data-od-log><li>Tu primer evento aparecerá aquí.</li></ol></details>
